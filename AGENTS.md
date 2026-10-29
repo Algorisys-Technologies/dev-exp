@@ -227,8 +227,7 @@ read and update them and reviewers can diff them:
 - Open or edit it at yappydraw.com (import the `.ysl`), or render it in code with the npm
   package: `import { Yappy, toSVG } from '@algorisys/yappydraw'`. The package runs in a browser
   only. As of 0.8.291 it has no renderer for the `user`, `browser` and `server` shapes, so check
-  diagrams that use them at yappydraw.com. It is licensed AGPL-3.0: use it for docs and tooling,
-  and don't bundle it into an app you ship or run as a service without a developer's sign-off.
+  diagrams that use them at yappydraw.com.
 - When a change adds or removes a service, database, queue, cache or external call, update the
   diagram **in the same PR**. A PR that changes architecture without changing the diagram is
   incomplete.
