@@ -35,12 +35,16 @@ Don't build these unless the spec needs them and a developer agreed:
 
 - an interface with one implementation (exception: a seam you need to substitute a test fake)
 - generic "base" repositories, services or handlers, or a framework of your own
-- factories, builders, plugin systems, DI containers or service locators
+- factory or builder types, plugin systems, DI containers or service locators (a plain
+  `NewX(...)` constructor is fine)
 - config options, feature flags or extension points nobody asked for
 - a new service, queue, cache or event bus where a function call or a transaction would do
-- wrappers around our stack (pgx, Fiber, zen-ui) that just rename what it already does
+- wrappers around our stack (pgx, Fiber, zen-ui, slog) that just rename what it already does.
+  Adapters for external services and for libraries outside the stack are expected; see
+  `AGENTS.md`, Design and code organisation.
 
-Three similar lines are fine. Extract on the third real copy, not the first. A reader should be
+DRY applies to knowledge: each business rule has one home. Three similar lines of code are fine.
+Extract on the third real copy, not the first. A reader should be
 able to follow a request from the handler to the SQL without opening more than three files.
 Clever code is a cost: if a junior colleague couldn't explain it back, rewrite it plainly.
 
@@ -367,6 +371,12 @@ When an agent keeps getting something wrong, read its transcript, find the momen
 went off, and fix the instruction for that moment. Add a rule here or in `AGENTS.md` only after
 a real failure, and say what failure it prevents.
 
+**Prefer a check to a rule.** A rule in a prompt is followed most of the time; a linter, a type
+or a test is followed every time, and its error message tells the agent what to do instead. When
+a rule can be checked by a tool, add the check (a lint rule, a test, a CI gate) and keep the
+prose to one line that points at it. Restyling zen-ui components is the example: agents broke
+the written rule, so `eslint.config.js` now fails the lint gate instead.
+
 ## XXXIX. Prune the Rules
 
 Models improve. Every quarter, re-read this file and `AGENTS.md` and delete rules the current
@@ -380,7 +390,7 @@ models follow without being told. Rules that only ever grow stop being read.
 |---|---|---|
 | I | Read first | Never write into an unread file |
 | II | Think first | State assumptions before code |
-| III | No overengineering | Plain functions; no speculative layers or one-impl interfaces |
+| III | No overengineering | Plain functions; no speculative layers or one-impl interfaces; DRY for rules, not lines |
 | IV | Scope lock | Touch only what the task needs |
 | V | Prove it | Run something before saying "done" |
 | VI | Outcome | Check the result against the request |
@@ -415,5 +425,5 @@ models follow without being told. Rules that only ever grow stop being read.
 | XXXV | HANDOFF.md | Read at start, update before push |
 | XXXVI | Disk state | Spec, plan, handoff on disk |
 | XXXVII | Restart | Start again from the spec, don't patch forever |
-| XXXVIII | Transcripts | Fix the instruction at the moment it failed |
+| XXXVIII | Transcripts | Fix the instruction where it failed; prefer a lint, type or test to prose |
 | XXXIX | Prune | Delete rules the models no longer need |
