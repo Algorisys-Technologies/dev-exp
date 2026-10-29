@@ -57,6 +57,11 @@ export default tseslint.config(
     },
   },
   {
+    // Build and test scripts run in Node.
+    files: ["scripts/**/*.{js,mjs}", "*.config.{js,mjs}"],
+    languageOptions: { globals: globals.node },
+  },
+  {
     // The API client module is where fetch is allowed. Adjust the path to the project's.
     files: ["src/api.ts", "src/api/**/*.ts"],
     rules: { "no-restricted-globals": "off" },
