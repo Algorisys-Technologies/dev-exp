@@ -42,7 +42,7 @@ developer (LOOPS VIII).
 | Database | **PostgreSQL** via `pgx/v5` | Parameterised queries only. Migrations in `migrations/`, forward-only. |
 | Cache | **Redis**, only when the spec calls for it | For read-heavy caching, rate limits and short-lived sessions. Never the source of truth: every cached value must be rebuildable from Postgres. Every key has a TTL and a documented prefix. |
 | Queue | **RabbitMQ**, only when the spec calls for it | For work that's slow, retried or crosses services. Durable queues, manual acks, a dead-letter queue per queue, idempotent consumers. Don't add a queue where a database transaction will do. |
-| Frontend | **SolidJS + TypeScript + zen-ui** (`@algorisys/zen-ui-solid`) | All UI is built from zen-ui components and tokens so every app looks and behaves alike. No other component library, no hand-rolled buttons, inputs, tables or dialogs, no hard-coded colours. If zen-ui lacks something, compose it from zen-ui parts and flag it for the zen-ui team. |
+| Frontend | **SolidJS + TypeScript + zen-ui** (`@algorisys/zen-ui-solid`) | All UI is built from zen-ui components and tokens so every app looks and behaves alike. No other component library, no hand-rolled buttons, inputs, tables or dialogs, no hard-coded colours. If zen-ui lacks something, compose it from zen-ui parts and flag it for the zen-ui team. zen-ui is not on the public npm registry: get it the way the zen-ui repo documents, or vendor its built package and say so in **This project**. |
 | Diagrams | **YappyDraw** (yappydraw.com, npm `@algorisys/yappydraw`) | See section 4. |
 
 ### Backend conventions
@@ -81,13 +81,58 @@ developer (LOOPS VIII).
 ### Frontend conventions
 
 - Import components from `@algorisys/zen-ui-solid`. Use zen-ui tokens for colour, spacing and
-  type, never raw values.
+  type, never raw values. Import `@algorisys/zen-ui-solid/preflight` before its styles; without
+  it, borders and checkboxes don't render.
+- **Don't restyle zen-ui components.** A component's own look (colour, padding, size, radius,
+  type) comes from its `variant`, `size` and `color` props and the `--zen-*` tokens. Don't pass
+  `style=` to a component, and don't pass a `class` that changes its look. For placement
+  (margin, width, grid area), wrap it in a layout element. If you need a look zen-ui doesn't
+  have, ask the zen-ui team for a variant. `npm run lint` enforces this (section 6), because
+  agents miss prompt-only rules.
 - Data fetching goes through one API client module. No `fetch` calls scattered in components.
 - Every screen handles loading, empty, error and permission-denied states.
 - Forms validate on the client for convenience and on the server for real. API responses are
   checked before use; a missing or malformed field shows the error state, not a blank or `NaN`.
 - Components are plain functions with props. No component factories, HOC chains or custom
   state frameworks; use Solid signals and stores directly.
+
+### Design and code organisation
+
+These sit inside LOOPS III (no overengineering). They say how to keep code tidy. They are not
+permission to add layers.
+
+- **One job per unit** (SOLID's single responsibility). The handler checks the request, the
+  service applies the business rules, the repository runs the SQL. A function does the one thing
+  its name says.
+- **Depend on small interfaces, defined where they're used** (SOLID's interface segregation
+  and dependency inversion). The package that needs a dependency declares an interface with only
+  the methods it calls. Dependencies come in through constructors. No DI containers.
+- **DRY means one home for each business rule**, not zero repeated lines. A rate, a status
+  transition or a date boundary lives in one function that everything calls. Code that only
+  looks similar is extracted on the third real copy (LOOPS III). The `dupl` linter flags
+  copy-paste.
+- **Use a pattern when it solves a problem you have today:**
+  - *Constructor* (Go's factory): `NewOrderService(repo, clock) (*OrderService, error)` checks
+    its dependencies and returns a ready value. No factory types or registries.
+  - *Adapter:* every external service, and every library outside the stack (email, SMS,
+    payments, object storage, the ERP, a PDF library, another team's API), sits behind a small
+    interface in one package. The app depends on that interface, so changing vendor touches one
+    package.
+  - *Strategy:* an interface or a func value, once there are two real variants.
+  - *No singletons.* Build shared things (database pool, logger, config, clients) once in
+    `main` and pass them down. No package-level mutable state.
+- **Wrap what might change, not the stack.** Libraries outside the stack go behind an adapter.
+  Don't wrap pgx, Fiber, zen-ui or `log/slog`: they are the stack, and `slog` is already the
+  logging interface. Configure the logger once in `main` and pass a `*slog.Logger`. In the
+  frontend, the one API client module wraps `fetch`; don't add axios. If another HTTP library is
+  ever approved, only the API client imports it.
+- **Shared helpers live in a package named for what they do** (`internal/dates`,
+  `internal/money`, `src/lib/format.ts`), with tests. Never `util`, `helpers`, `common` or
+  `misc`. Look for an existing helper before writing one.
+- **One main type per file.** In Go, a type with methods gets its own file named after it
+  (`order-service.go` for `OrderService`). Its request and response structs can sit beside it.
+  In the frontend, one exported component per file, named after it (`order-table.tsx` exports
+  `OrderTable`). Helpers that only that component uses can stay in its file.
 
 ---
 
@@ -103,7 +148,7 @@ Follow LOOPS XI to XIII exactly. In short:
 3. **Code.** The least code that turns them green. Refactor on green. Commit as
    `impl: <feature>`.
 4. **Gates.** Run everything in section 6. Then run the skills in section 5.
-5. **PR.** Open it with the PR template filled in. A developer reviews and merges. Agents never
+5. **PR.** Open it with the PR template (`.github/pull_request_template.md`) filled in. A developer reviews and merges. Agents never
    merge their own PRs and never push to `main`.
 
 ### Spec template
@@ -180,7 +225,10 @@ read and update them and reviewers can diff them:
   `examples/dsl/`.
 
 - Open or edit it at yappydraw.com (import the `.ysl`), or render it in code with the npm
-  package: `import { Yappy, toSVG } from '@algorisys/yappydraw'`.
+  package: `import { Yappy, toSVG } from '@algorisys/yappydraw'`. The package runs in a browser
+  only. As of 0.8.291 it has no renderer for the `user`, `browser` and `server` shapes, so check
+  diagrams that use them at yappydraw.com. It is licensed AGPL-3.0: use it for docs and tooling,
+  and don't bundle it into an app you ship or run as a service without a developer's sign-off.
 - When a change adds or removes a service, database, queue, cache or external call, update the
   diagram **in the same PR**. A PR that changes architecture without changing the diagram is
   incomplete.
@@ -222,16 +270,17 @@ disable, `t.Skip()`, `.skip`, or delete a failing test or lint rule to get a gat
 fails and you can't fix it, stop and report it verbatim.
 
 ```bash
-# Backend
-gofmt -l backend/            # must print nothing
+# Backend, from the Go module root (e.g. backend/)
+gofmt -l .                   # must print nothing
 go vet ./...
-golangci-lint run            # if .golangci.yml exists
+golangci-lint run            # .golangci.yml copied from dev-exp's golangci.yml
 go test -race ./...
 
 # Migrations: must apply cleanly to an empty database
 make db-reset && make migrate   # or the project's equivalent (see "This project")
 
 # Frontend
+npm run lint                 # eslint . with eslint.config.js copied from dev-exp
 npm run typecheck
 npm test
 npm run build
@@ -245,6 +294,7 @@ Plus:
 - [ ] Every rule in the spec has a test, and the spec status is `Implemented`.
 - [ ] Every new input is validated before use, with a test for each way it can be invalid.
 - [ ] No new interface, layer, generic helper or config option that the spec didn't need.
+- [ ] No `//nolint` or `eslint-disable` without the rule's name and a reason.
 - [ ] Relevant skills from section 5 were run; findings fixed or listed in the PR.
 - [ ] Diagram updated if the architecture changed.
 - [ ] `CHANGELOG.md` updated for functional changes. `HANDOFF.md` updated.
