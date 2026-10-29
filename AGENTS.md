@@ -148,7 +148,7 @@ Follow LOOPS XI to XIII exactly. In short:
 3. **Code.** The least code that turns them green. Refactor on green. Commit as
    `impl: <feature>`.
 4. **Gates.** Run everything in section 6. Then run the skills in section 5.
-5. **PR.** Open it with the PR template filled in. A developer reviews and merges. Agents never
+5. **PR.** Open it with the PR template (`.github/pull_request_template.md`) filled in. A developer reviews and merges. Agents never
    merge their own PRs and never push to `main`.
 
 ### Spec template
@@ -227,7 +227,8 @@ read and update them and reviewers can diff them:
 - Open or edit it at yappydraw.com (import the `.ysl`), or render it in code with the npm
   package: `import { Yappy, toSVG } from '@algorisys/yappydraw'`. The package runs in a browser
   only. As of 0.8.291 it has no renderer for the `user`, `browser` and `server` shapes, so check
-  diagrams that use them at yappydraw.com.
+  diagrams that use them at yappydraw.com. It is licensed AGPL-3.0: use it for docs and tooling,
+  and don't bundle it into an app you ship or run as a service without a developer's sign-off.
 - When a change adds or removes a service, database, queue, cache or external call, update the
   diagram **in the same PR**. A PR that changes architecture without changing the diagram is
   incomplete.

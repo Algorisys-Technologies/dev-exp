@@ -12,6 +12,7 @@ to the frontend root.
 | [`CLAUDE.md`](CLAUDE.md) | A shim so Claude Code loads `AGENTS.md`, `LOOPS.md` and `HANDOFF.md`. |
 | [`HANDOFF.md`](HANDOFF.md) | Template for where the last session stopped (LOOPS XXXV). `CLAUDE.md` loads it, so every repo needs one. |
 | [`golangci.yml`](golangci.yml) | Shared Go lint config (golangci-lint v2): the standard linters plus security, SQL, error-handling, copy-paste and complexity checks. |
+| [`.github/pull_request_template.md`](.github/pull_request_template.md) | The PR template that AGENTS.md section 3 asks for. Copy it into each repo's `.github/`. |
 | [`eslint.config.js`](eslint.config.js) | Shared frontend lint config for SolidJS + TypeScript, including the zen-ui checks: no `style=` on components, no hard-coded colours, no other component libraries, no `fetch` outside the API client. |
 
 Everyone builds with agents here, including colleagues who aren't developers. These files are
