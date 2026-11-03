@@ -1,0 +1,52 @@
+# Algorisys shared golangci-lint config (v2). Copy to the Go module root as .golangci.yml.
+# Gate: `golangci-lint run` must report nothing (AGENTS.md section 6). Don't switch linters off
+# to get a change through; a //nolint needs the linter's name and a reason.
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - bodyclose      # HTTP response bodies are closed
+    - dupl           # copy-pasted blocks (DRY): extract on the third copy
+    - errorlint      # errors compared and wrapped with errors.Is/As and %w
+    - forbidigo      # banned calls, below
+    - gocritic       # common bugs and clumsy code
+    - gocyclo        # functions too complex to follow
+    - gosec          # security: SQL built from strings, weak crypto, file permissions
+    - misspell
+    - nolintlint     # every //nolint names a linter and says why
+    - revive         # naming and exported-API conventions
+    - rowserrcheck   # sql.Rows.Err is checked
+    - sqlclosecheck  # sql.Rows and statements are closed
+    - unconvert
+    - unparam        # parameters and results nobody uses
+  settings:
+    dupl:
+      threshold: 150
+    gocyclo:
+      min-complexity: 20
+    forbidigo:
+      forbid:
+        - pattern: ^fmt\.Print(f|ln)?$
+          msg: use log/slog (AGENTS.md, Backend conventions)
+        - pattern: ^print(ln)?$
+          msg: use log/slog (AGENTS.md, Backend conventions)
+        - pattern: ^log\.(Print|Printf|Println)$
+          msg: use log/slog (AGENTS.md, Backend conventions)
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+  exclusions:
+    presets:
+      - std-error-handling
+    rules:
+      - path: _test\.go
+        linters: [dupl, gosec, gocyclo]
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
