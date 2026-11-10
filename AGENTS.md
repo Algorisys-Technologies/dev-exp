@@ -307,7 +307,8 @@ For BI and analytics colleagues building reports, dashboards and data features:
 ## 9. Commits and PRs
 
 - Branch: `feat/<feature>`, `fix/<issue>`. Never commit to `main`.
-- Commits: `spec:`, `test:`, `impl:`, `fix:`, `docs:`, `chore:` (LOOPS XIII). Messages say why.
+- Commits: `spec:`, `test:`, `impl:`, `fix:`, `docs:`, `chore:` (LOOPS XIII). Messages say why
+  and follow LOOPS XXIX (no status narration, no AI attribution).
 - PR description: link to the spec, what changed, how it was tested (paste the gate output
   summary), skills run and findings, anything a reviewer should look at first, and whether the
   author is a developer.
