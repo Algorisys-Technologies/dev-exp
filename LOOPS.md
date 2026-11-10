@@ -293,6 +293,16 @@ error messages) must sound like a person wrote it. Short sentences. Specific num
 "utilize", "robust", "seamless", "comprehensive", "delve", "it's worth noting", "in order to",
 stacked adjectives or walls of bullets. Test: would a real person say this out loud?
 
+Describe the change, not what you did to the repo. Commit messages, docs, comments and changelog
+entries never contain "committed", "pushed" or "fixed": git already records that, and the words
+go stale or read as a chat log. Write "Reject invoices with no lines", not "Fixed invoice bug and
+pushed". The `fix:` commit prefix is fine; the word in the message body is not.
+
+No AI attribution anywhere: no `Co-Authored-By` trailer, "Generated with" line or signature
+naming Claude, ChatGPT, Copilot or any other model or tool, in commits, PRs or docs. The person
+who opens the PR is the author and answers for the change. Tooling that adds these lines by
+default must be turned off or the line removed before committing.
+
 ---
 
 # TIER 5: REVIEW
@@ -406,7 +416,7 @@ models follow without being told. Rules that only ever grow stop being read.
 | XXVI | Decide | Recommend and act; one blocking question |
 | XXVII | Complete | Every item, checked |
 | XXVIII | Clean up | Temp files in `tmp/`, then gone |
-| XXIX | Human prose | No AI slop in anything people read |
+| XXIX | Human prose | No AI slop, no "fixed/pushed" narration, no AI co-author lines |
 | XXX | Review | Self-review, fresh-context reviewer, developer merges |
 | XXXI | Comments | Only the non-obvious why |
 | XXXII | Recoverable | Branch, commit, confirm before destructive or outward actions |

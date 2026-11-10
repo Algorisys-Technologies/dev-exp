@@ -307,7 +307,10 @@ For BI and analytics colleagues building reports, dashboards and data features:
 ## 9. Commits and PRs
 
 - Branch: `feat/<feature>`, `fix/<issue>`. Never commit to `main`.
-- Commits: `spec:`, `test:`, `impl:`, `fix:`, `docs:`, `chore:` (LOOPS XIII). Messages say why.
+- Commits: `spec:`, `test:`, `impl:`, `fix:`, `docs:`, `chore:` (LOOPS XIII). Messages say why
+  and describe the change. Never write "committed", "pushed" or "fixed" in a message or doc, and
+  never add a `Co-Authored-By` or "Generated with" line for Claude or any other AI tool, in
+  commits or PR descriptions (LOOPS XXIX).
 - PR description: link to the spec, what changed, how it was tested (paste the gate output
   summary), skills run and findings, anything a reviewer should look at first, and whether the
   author is a developer.
