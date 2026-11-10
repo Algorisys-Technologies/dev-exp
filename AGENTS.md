@@ -77,6 +77,12 @@ developer (LOOPS VIII).
 - Money: integer minor units or `shopspring/decimal`. Never `float64`.
 - List endpoints are paginated with a server-side maximum page size.
 - No `panic` in request paths. No global mutable state.
+- No magic values. A literal that means something (a status, role, error code, limit, timeout,
+  cache key prefix, queue name or routing key) is defined once as a named constant or typed
+  enum, next to the code that owns it, and used by name everywhere else. Statuses and roles are
+  Go types (`type OrderStatus string`), and a `switch` on one has a `default` that returns an
+  error (LOOPS XVIII). A named constant is not a config option: only move a value into env or
+  config when the spec says it differs between environments (LOOPS III).
 
 ### Frontend conventions
 
@@ -88,6 +94,8 @@ developer (LOOPS VIII).
   checked before use; a missing or malformed field shows the error state, not a blank or `NaN`.
 - Components are plain functions with props. No component factories, HOC chains or custom
   state frameworks; use Solid signals and stores directly.
+- Route paths, API error codes and status values the UI branches on are named constants or
+  union types defined once, not string literals repeated across components.
 
 ---
 
