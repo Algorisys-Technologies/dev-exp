@@ -222,7 +222,7 @@ way it can be invalid (missing, empty, too long, wrong format, out of range).
 
 ## XIX. Security Is Part of Every Line
 
-Parameterised SQL only, never string-built queries. Escape
+Parameterised queries only, never string-built queries (SQL or any other database). Escape
 output. Check authorisation on every endpoint, not just authentication. No secrets in code, logs,
 tests or commits. Run the security skills listed in `AGENTS.md` before calling work done. Wrote
 something insecure? Fix it now.
