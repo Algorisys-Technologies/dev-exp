@@ -33,24 +33,33 @@ developers. Assume the person in front of you may not be able to read the code. 
 
 ## 2. The stack
 
-Use these. Don't introduce alternatives. If one genuinely can't do the job, stop and ask a
-developer (LOOPS VIII).
+The stack has two parts. Don't introduce alternatives to either. If something genuinely can't do
+the job, stop and ask a developer (LOOPS VIII).
+
+**The same in every project:**
 
 | Concern | Use | Notes |
 |---|---|---|
 | Backend | **Go + Fiber** | Go and Fiber versions come from `go.mod`. Don't upgrade them, and don't mix Fiber v2 and v3 APIs; check `go.mod` before writing a handler. |
-| Database | **PostgreSQL** via `pgx/v5` | Parameterised queries only. Migrations in `migrations/`, forward-only. |
-| Cache | **Redis**, only when the spec calls for it | For read-heavy caching, rate limits and short-lived sessions. Never the source of truth: every cached value must be rebuildable from Postgres. Every key has a TTL and a documented prefix. |
-| Queue | **RabbitMQ**, only when the spec calls for it | For work that's slow, retried or crosses services. Durable queues, manual acks, a dead-letter queue per queue, idempotent consumers. Don't add a queue where a database transaction will do. |
 | Frontend | **SolidJS + TypeScript + zen-ui** (`@algorisys/zen-ui-solid`) | All UI is built from zen-ui components and tokens so every app looks and behaves alike. No other component library, no hand-rolled buttons, inputs, tables or dialogs, no hard-coded colours. If zen-ui lacks something, compose it from zen-ui parts and flag it for the zen-ui team. |
 | Diagrams | **YappyDraw** (yappydraw.com, npm `@algorisys/yappydraw`) | See section 4. |
 
+**Chosen per project.** Database, cache and queue vary between projects. Each repo names its
+choices in **This project** at the bottom of this file; use those and nothing else. The rows below
+are the defaults for new projects and the rules for each one when a project uses it.
+
+| Concern | Default | Rules when used |
+|---|---|---|
+| Database | **PostgreSQL** via `pgx/v5` | Parameterised queries only. Migrations in `migrations/`, forward-only. Another database (MongoDB, for example) keeps the intent: queries built from typed values, never concatenated strings, and forward-only migrations for schema and index changes. |
+| Cache | **Redis**, only when the spec calls for it | For read-heavy caching, rate limits and short-lived sessions. Never the source of truth: every cached value must be rebuildable from the database. Every key has a TTL and a documented prefix. |
+| Queue | **RabbitMQ**, only when the spec calls for it | For work that's slow, retried or crosses services. Durable queues, manual acks, a dead-letter queue per queue, idempotent consumers. Don't add a queue where a database transaction will do. |
+
 ### Backend conventions
 
-- Layout: `backend/` for Go, `frontend/` for SolidJS, `migrations/` for SQL, `docs/` for specs,
-  ADRs and diagrams. File and folder names are lowercase with hyphens.
+- Layout: `backend/` for Go, `frontend/` for SolidJS, `migrations/` for database migrations,
+  `docs/` for specs, ADRs and diagrams. File and folder names are lowercase with hyphens.
 - Layers: handler (HTTP, validation, auth check), then service (business rules), then
-  repository (SQL). Handlers never run SQL. Services never touch `fiber.Ctx`. These three are the
+  repository (database queries). Handlers never query the database. Services never touch `fiber.Ctx`. These three are the
   only layers. No extra "manager", "helper", "base" or "util" layers, and no interface unless it
   has two implementations or is the seam for a test fake (LOOPS III).
 - **Validate every input before use** (LOOPS XVIII):
@@ -60,12 +69,12 @@ developer (LOOPS VIII).
     it has one; don't add a validation library without approval.
   - The handler converts the validated request into domain types (`OrderID`, `Email`,
     `Money`) and passes only those to the service. Services don't re-validate.
-  - RabbitMQ messages, Redis values and external API responses are decoded and validated the
+  - Queue messages, cache values and external API responses are decoded and validated the
     same way before use. An invalid message goes to the dead-letter queue with the reason logged.
   - Body size, page size, string lengths and upload sizes all have explicit limits.
   - Validation failures return `400` or `422` with the field name and a human reason.
-- Every request has a `context.Context` with a deadline, passed all the way down to pgx, Redis
-  and RabbitMQ calls. Every outbound HTTP call has a timeout.
+- Every request has a `context.Context` with a deadline, passed all the way down to every
+  database, cache and queue call. Every outbound HTTP call has a timeout.
 - Errors: wrap with `fmt.Errorf("doing x: %w", err)`. Return JSON errors with a stable `code`
   and a human `message`; never return stack traces or raw database errors to clients.
 - Logging: `log/slog` with key/value fields. No `fmt.Println`. No personal data or secrets in
@@ -211,11 +220,11 @@ find, or list each finding you didn't fix in the PR with a reason.
 
 | When the change... | Run |
 |---|---|
-| touches any handler, input, auth, file upload, SQL or HTML output | `/owasp` |
+| touches any handler, input, auth, file upload, database query or HTML output | `/owasp` |
 | touches personal data, logs, analytics events or API responses with user data | `/pii-guard` |
 | touches amounts, balances, payments, invoices or rounding | `/money-safety` |
 | touches sensitive actions (money, roles, approvals, data export, login) | `/audit-trail` |
-| calls an external API, Redis, RabbitMQ or a webhook | `/resilience` |
+| calls an external API, a cache, a queue or a webhook | `/resilience` |
 | is a new feature touching auth, personal data, money or a public API (at spec stage) | `/threat-model <feature>` |
 | touches regulated data (cards, KYC, financial records) | `/regtech` |
 | changes UI | `/ui-craft` |
@@ -236,7 +245,7 @@ go vet ./...
 golangci-lint run            # if .golangci.yml exists
 go test -race ./...
 
-# Migrations: must apply cleanly to an empty database
+# Migrations (if the project has them): must apply cleanly to an empty database
 make db-reset && make migrate   # or the project's equivalent (see "This project")
 
 # Frontend
@@ -291,16 +300,16 @@ For BI and analytics colleagues building reports, dashboards and data features:
 
 - Work against the dev database or an anonymised copy, with a **read-only** role unless the spec
   says the feature writes data.
-- Reusable report logic goes in a SQL view or a repository function with tests, not copied into
-  several screens.
+- Reusable report logic goes in a database view or a repository function with tests, not copied
+  into several screens.
 - Every number on a report needs an oracle test (LOOPS XVII): a fixed dataset and the expected
   totals, ideally checked against the spreadsheet or report people trust today.
 - Name the time zone and the date boundary in the spec ("orders created 00:00 to 23:59 IST,
   inclusive"). Off-by-one-day is the most common report bug.
 - Aggregate before showing. Never expose row-level personal data in a dashboard unless the spec
   says who may see it and the endpoint checks it.
-- Heavy queries: check `EXPLAIN ANALYZE` on realistic data volumes and add indexes through a
-  migration, not by hand.
+- Heavy queries: check the query plan on realistic data volumes (`EXPLAIN ANALYZE` in Postgres,
+  `explain()` in MongoDB) and add indexes through a migration, not by hand.
 
 ---
 
@@ -324,6 +333,7 @@ For BI and analytics colleagues building reports, dashboards and data features:
 - **Owner / developer reviewers:** <names>
 - **Run locally:** <commands, e.g. `docker compose up -d && make dev`>
 - **Reset and migrate DB:** <commands>
-- **Uses Redis:** yes / no (key prefixes: ...). **Uses RabbitMQ:** yes / no (queues: ...)
+- **Data stores:** database <e.g. PostgreSQL>, cache <Redis / none> (key prefixes: ...), queue
+  <RabbitMQ / none> (queues: ...)
 - **Architecture diagram:** `docs/architecture/<name>.ysl`
 - **Domain rules agents keep getting wrong:** <add one line per real failure, with the date>
