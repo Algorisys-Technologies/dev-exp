@@ -97,6 +97,11 @@ are the defaults for new projects and the rules for each one when a project uses
 
 - Import components from `@algorisys/zen-ui-solid`. Use zen-ui tokens for colour, spacing and
   type, never raw values.
+- Pick the input that fits the data, so the control itself blocks wrong values. A number gets a
+  numeric input that won't accept letters, a date gets a date picker, a fixed list gets a select
+  or radio group, a yes/no gets a checkbox or switch, an amount gets a money input in minor units.
+  Set the matching limits on it (min, max, step, max length). A plain text box is only for free
+  text.
 - Data fetching goes through one API client module. No `fetch` calls scattered in components.
 - Every screen handles loading, empty, error and permission-denied states.
 - Forms validate on the client for convenience and on the server for real. API responses are
