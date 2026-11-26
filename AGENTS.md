@@ -125,8 +125,8 @@ Follow LOOPS XI to XIII exactly. In short:
 3. **Code.** The least code that turns them green. Refactor on green. Commit as
    `impl: <feature>`.
 4. **Gates.** Run everything in section 6. Then run the skills in section 5.
-5. **PR.** Open it with the PR template filled in. A developer reviews and merges. Agents never
-   merge their own PRs and never push to `main`.
+5. **PR.** Open it against `dev` with the PR template filled in. A developer reviews and merges.
+   Agents never merge their own PRs and never push to `dev` or `main`.
 
 ### Spec template
 
@@ -294,7 +294,7 @@ Never, for anyone:
 
 - connect to production, or use production data or credentials
 - commit secrets, or print them to the terminal
-- push to `main`, merge your own PR, deploy or publish
+- push to `dev` or `main`, merge your own PR, deploy or publish
 - disable a test, a lint rule, a security check or CI to get a change through
 
 ---
@@ -320,7 +320,11 @@ For BI and analytics colleagues building reports, dashboards and data features:
 
 ## 9. Commits and PRs
 
-- Branch: `feat/<feature>`, `fix/<issue>`. Never commit to `main`.
+- Branches: `dev` is the integration branch and `main` is what we release. Neither takes direct
+  commits.
+- Start every branch from the latest `dev`: `feat/<feature>`, `fix/<issue>`, `docs/<topic>`,
+  `chore/<topic>`. Open the PR against `dev`, never `main`.
+- Only `dev` merges into `main`, through a release PR that a developer opens and approves.
 - Commits: `spec:`, `test:`, `impl:`, `fix:`, `docs:`, `chore:` (LOOPS XIII). Messages say why
   and follow LOOPS XXIX (no status narration, no AI attribution).
 - PR description: link to the spec, what changed, how it was tested (paste the gate output
