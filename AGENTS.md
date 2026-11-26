@@ -342,6 +342,10 @@ For BI and analytics colleagues building reports, dashboards and data features:
 - **Owner / developer reviewers:** <names>
 - **Run locally:** <commands, e.g. `docker compose up -d && make dev`>
 - **Reset and migrate DB:** <commands>
+- **Merge exception (added 2026-11-26):** Rajesh Pillai (`rajeshpillai`) is the only developer.
+  While that's true, an agent may merge its own PR into `dev`, and release `dev` into `main`,
+  when he says so in the session. This overrides §3 step 5, §7 and LOOPS XXX for merging only;
+  every other rule still applies. Remove this line when a second developer joins.
 - **Data stores:** database <e.g. PostgreSQL>, cache <Redis / none> (key prefixes: ...), queue
   <RabbitMQ / none> (queues: ...)
 - **Architecture diagram:** `docs/architecture/<name>.ysl`
