@@ -150,7 +150,7 @@ History must show the steps happened in order:
 3. `impl: <feature>`: the code. All tests pass.
 
 A bug fix is `test:` (failing reproduction) then `fix:`. Docs and tooling use `docs:` / `chore:`.
-Push the steps together so the main branch never sees the red commit alone.
+Push the steps together so `dev` never sees the red commit alone.
 
 ## XIV. Complete Code Only
 
@@ -331,8 +331,8 @@ chat in a comment.
 
 ## XXXII. Every Change Must Be Recoverable
 
-Work on a branch, never directly on `main`. Commit a known-good state before risky work. No
-`.backup` copies; git is the backup. Before anything destructive (deleting files, dropping data,
+Work on a branch cut from `dev`, never directly on `dev` or `main`. Only `dev` merges into
+`main`. Commit a known-good state before risky work. No `.backup` copies; git is the backup. Before anything destructive (deleting files, dropping data,
 force-pushing, `rm -rf`, overwriting output), look at the target and get confirmation. For
 anything outward-facing (push, deploy, publish, send, run against shared data), confirm first.
 Approval for one such action doesn't cover the next.
